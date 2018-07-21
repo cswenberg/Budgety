@@ -38,7 +38,6 @@ var budgetController = (function() {
 			percentage: 0
 		},
 		budget: 0
-
 	}
 
 	var updateBudget = function() {
@@ -91,7 +90,7 @@ var budgetController = (function() {
 		updatePercentages: function() {
 			data.expense.list.forEach(function(item) {
 				item.calculatePercentage()
-			}
+			})
 		},
 
 		getPercentages: function() {
@@ -99,7 +98,7 @@ var budgetController = (function() {
 				return each.percentage
 			})
 			return all
-		}
+		},
 
 		testing: function() {
 			return data
@@ -122,9 +121,16 @@ var uiController = (function() {
 		incomeLabel: '.budget__income--value',
 		expensesLabel: '.budget__expenses--value',
 		percentageLabel: '.budget__expenses--percentage',
-		container: '.container'
+		container: '.container',
+		expPercentageLabel: '.item__percentage',
+		dataLabel: '.budget__title--month'
 	}
 
+	var nodeListForEach = function(list, callback) {
+		for (var i = 0; i<list.length; i++) {
+			callback(list[i], i)
+		}
+	}
 
 
 	return {
@@ -170,7 +176,7 @@ var uiController = (function() {
 
 			var fields = document.querySelectorAll(DOM.description+', '+DOM.value) //returns a list of elements, not an array
 
-			var array = Array.prototype.slice.call(fields) //forces call of Array's method slice on our list fields to return an array of elements
+			var array = Array.from(fields) //forces call of Array's method slice on our list fields to return an array of elements
 
 			array.forEach(function(element) {
 				element.value = '' //sets element's text value to empty string to clear it
@@ -192,9 +198,44 @@ var uiController = (function() {
 			} else {
 				document.querySelector(DOM.percentageLabel).textContent = '---'
 			}
+		},
 
-		}
+		displayPercentages: function(percentages) {
 
+			var fields = document.querySelectorAll(DOM.expPercentageLabel)
+		
+			nodeListForEach(fields, function(current, index) {
+				//code
+				if (percentages[index] > 0) {
+					current.textContent = percentages[index] + '%'
+				} else {
+					current.textContent = '---'
+				}
+			})
+		},
+
+		displayDate: function() {
+			var date = new Date()
+			var months = ['January','Febuary','March','April','May','June','July','August','September','October','November','December']
+			var month = months[date.getMonth()]
+			var year = date.getFullYear()
+			document.querySelector(DOM.dataLabel).textContent = month + ' ' + year
+		},
+
+		colorToggle: function() {
+
+		var fields = document.querySelectorAll(
+			DOM.type + ',' +
+			DOM.description + ',' +
+			DOM.value
+		)
+
+		nodeListForEach(fields, function(current) {
+			current.classList.toggle('red-focus')
+		})
+
+		document.querySelector(DOM.button).classList.toggle('red')
+	}
 
 	}
 })()
@@ -215,6 +256,7 @@ var controller = (function(budget, ui) {
 			}
 		})
 		document.querySelector(DOM.container).addEventListener('click', deleteItem)
+		document.querySelector(DOM.type).addEventListener('change', ui.colorToggle)
 	}
 
 	var addItem = function() {
@@ -226,15 +268,11 @@ var controller = (function(budget, ui) {
 			var item = budget.addItem(inputs.type, inputs.description, inputs.value)
 			//display new item on ui
 			ui.addItem(item, inputs.type)
-			//recalculate percentages of existing elements (if necessary)
-			budget.updatePercentages()
 			//clear input values and refocus cursor 
 			ui.resetFields()
 			//update budget and display on ui
 			updateBudget()
-			if (inputs.type == 'income') {
-				updatePercentages()
-			}
+			updatePercentages()
 		}
 	}
 
@@ -277,6 +315,7 @@ var controller = (function(budget, ui) {
 				budget: 0,
 				percentage: -1
 			})
+			ui.displayDate()
 		}
 
 	}
